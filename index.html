@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Solace Sunbed Lounge</title>
+<style>
+  :root{
+    --bg:#F6F1E8;
+    --surface:#FFFFFF;
+    --ink:#1A1714;
+    --muted:#8A8177;
+    --border:#E7DFD1;
+    --accent:#C9A24B;
+    --black:#141210;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html{-webkit-text-size-adjust:100%;}
+  body{
+    margin:0;font-family:'Helvetica Neue',Arial,sans-serif;background:var(--bg);color:var(--ink);
+    overscroll-behavior:none;overflow-x:hidden;
+  }
+  .phone{max-width:430px;margin:0 auto;min-height:100vh;background:var(--bg);position:relative;}
+  .top-bar{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;padding-top:calc(14px + env(safe-area-inset-top));}
+  .top-bar button{background:none;border:none;font-size:22px;color:var(--ink);padding:10px;min-width:44px;min-height:44px;}
+  .top-bar h1{font-size:15px;letter-spacing:1.5px;font-weight:700;margin:0;text-transform:uppercase;}
+
+  .screen{display:none;padding-bottom:88px;}
+  .screen.active{display:block;}
+
+  /* HOME */
+  .hero{padding:32px 24px 20px;text-align:center;}
+  .hero-badge{width:64px;height:64px;margin:0 auto 14px;border-radius:50%;background:linear-gradient(135deg,#F0DFC0,#C9A24B);display:flex;align-items:center;justify-content:center;font-size:28px;}
+  .brand-name{font-size:30px;letter-spacing:6px;font-weight:300;margin:0;}
+  .brand-sub{font-size:11px;letter-spacing:3px;color:var(--muted);margin-top:4px;}
+  .hero-visual{margin:24px 0;height:200px;border-radius:20px;background:linear-gradient(160deg,#E7DCC5,#CFC0A0);display:flex;align-items:center;justify-content:center;font-size:48px;overflow:hidden;position:relative;}
+  .hero-visual::after{content:'☀';position:absolute;top:16px;right:24px;font-size:20px;color:#C9A24B;}
+  .tagline{font-size:20px;font-weight:700;margin:18px 0 4px;}
+  .tagline-sub{color:var(--muted);font-size:14px;margin:0 0 22px;}
+  .btn{display:block;width:100%;min-height:52px;border-radius:14px;border:none;font-size:15px;font-weight:700;letter-spacing:1px;text-transform:uppercase;cursor:pointer;}
+  .btn-primary{background:var(--black);color:#fff;margin-bottom:12px;}
+  .btn-outline{background:transparent;border:1.5px solid var(--black);color:var(--black);}
+  .quick-actions{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:24px;text-align:center;}
+  .quick-actions .qa{display:flex;flex-direction:column;align-items:center;gap:6px;font-size:11px;color:var(--ink);min-height:44px;justify-content:center;}
+  .qa-icon{width:44px;height:44px;border-radius:50%;background:var(--surface);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:18px;}
+
+  /* SECTION CONTAINER */
+  .content{padding:16px 20px;}
+  .tabs{display:flex;border-bottom:1px solid var(--border);margin-bottom:16px;}
+  .tab{flex:1;text-align:center;padding:12px 0;font-size:13px;font-weight:700;letter-spacing:0.5px;color:var(--muted);background:none;border:none;border-bottom:2px solid transparent;min-height:44px;}
+  .tab.active{color:var(--ink);border-bottom-color:var(--ink);}
+  .section-title{font-size:12px;letter-spacing:1.5px;color:var(--muted);font-weight:700;margin:8px 0 14px;text-transform:uppercase;}
+
+  /* BED CARDS */
+  .bed-card{display:flex;gap:14px;align-items:center;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:12px;margin-bottom:12px;cursor:pointer;}
+  .bed-card.selected{border-color:var(--ink);}
+  .bed-thumb{width:64px;height:56px;border-radius:10px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:22px;color:#fff;}
+  .bed-info{flex:1;min-width:0;}
+  .bed-info .name{font-weight:700;font-size:15px;margin:0 0 2px;}
+  .bed-info .desc{font-size:12px;color:var(--muted);margin:0 0 4px;}
+  .bed-info .price{font-size:13px;font-weight:700;}
+  .radio{width:22px;height:22px;border-radius:50%;border:2px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+  .bed-card.selected .radio{border-color:var(--ink);background:var(--ink);}
+  .radio.dot::after{content:'';width:9px;height:9px;border-radius:50%;background:#fff;}
+
+  /* TIME SELECT */
+  .selected-bed-card{display:flex;gap:14px;align-items:center;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:20px;}
+  .selected-bed-card .info{flex:1;}
+  .selected-bed-card .name{font-weight:700;font-size:15px;margin:0;}
+  .selected-bed-card .meta{font-size:12px;color:var(--muted);margin:2px 0 0;}
+  .change-btn{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:8px 14px;font-size:12px;font-weight:700;min-height:36px;}
+  .date-row,.time-grid{display:grid;gap:8px;margin-bottom:20px;}
+  .date-row{grid-template-columns:repeat(4,1fr);}
+  .time-grid{grid-template-columns:repeat(4,1fr);}
+  .chip{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 4px;text-align:center;font-size:13px;font-weight:600;min-height:44px;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+  .chip.active{background:var(--black);color:#fff;border-color:var(--black);}
+  .chip small{display:block;font-size:11px;color:inherit;opacity:.8;}
+
+  /* CONFIRMATION */
+  .confirm-wrap{padding:40px 24px;text-align:center;}
+  .check-circle{width:76px;height:76px;border-radius:50%;background:var(--black);color:#fff;font-size:34px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;}
+  .confirm-title{font-size:22px;font-weight:700;margin:0;}
+  .confirm-title em{font-style:italic;font-weight:400;}
+  .confirm-sub{color:var(--muted);font-size:13px;margin:6px 0 24px;}
+  .confirm-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:18px;text-align:left;}
+  .confirm-card .thumb-row{display:flex;gap:12px;align-items:center;margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border);}
+  .confirm-row{display:flex;gap:10px;font-size:13px;padding:6px 0;color:var(--ink);}
+  .confirm-row .ico{width:18px;text-align:center;}
+  .link-row{display:flex;justify-content:space-between;align-items:center;padding-top:14px;margin-top:8px;border-top:1px solid var(--border);font-size:13px;font-weight:700;}
+
+  /* MEMBERSHIPS */
+  .glow-banner{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px;display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;}
+  .glow-banner h3{margin:0;font-size:16px;}
+  .glow-banner p{margin:2px 0 0;font-size:12px;color:var(--muted);}
+  .plan{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;}
+  .plan.selected{border-color:var(--ink);}
+  .plan .pname{font-weight:700;font-size:14px;}
+  .plan .pdesc{font-size:12px;color:var(--muted);margin:2px 0;}
+  .plan .pprice{font-size:14px;font-weight:700;}
+  .badge{background:var(--accent);color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:8px;margin-left:6px;}
+  .perk-list{margin:18px 0;padding:0;list-style:none;}
+  .perk-list li{font-size:13px;padding:6px 0;}
+  .perk-list li::before{content:'✓ ';color:var(--accent);font-weight:700;}
+
+  /* SPIN */
+  .spin-wrap{text-align:center;padding:20px 24px;}
+  .spin-wrap p{color:var(--muted);font-size:13px;max-width:280px;margin:0 auto 24px;}
+  .wheel-outer{width:260px;height:260px;margin:0 auto 24px;border-radius:50%;position:relative;background:conic-gradient(#1A1714 0deg 60deg,#F6F1E8 60deg 120deg,#C9A24B 120deg 180deg,#E7DFD1 180deg 240deg,#1A1714 240deg 300deg,#F6F1E8 300deg 360deg);transition:transform 3s cubic-bezier(.17,.67,.32,1.4);display:flex;align-items:center;justify-content:center;}
+  .wheel-outer::before{content:'';position:absolute;inset:0;border-radius:50%;border:6px solid var(--surface);}
+  .wheel-center{width:56px;height:56px;background:var(--surface);border-radius:50%;z-index:2;display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:0 0 0 2px var(--border);}
+  .pointer{position:absolute;top:-6px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:10px solid transparent;border-right:10px solid transparent;border-top:16px solid var(--black);z-index:3;}
+  .spins-left{font-size:12px;color:var(--muted);margin-top:16px;}
+  .spin-result{font-weight:700;font-size:15px;margin-top:14px;min-height:20px;}
+
+  /* SHOP */
+  .search-bar{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 14px;font-size:16px;width:100%;margin-bottom:14px;color:var(--muted);}
+  .filter-row{display:flex;gap:8px;margin-bottom:16px;overflow-x:auto;}
+  .filter-chip{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:8px 16px;font-size:12px;font-weight:600;white-space:nowrap;min-height:36px;}
+  .filter-chip.active{background:var(--black);color:#fff;border-color:var(--black);}
+  .product{display:flex;gap:12px;align-items:center;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:12px;margin-bottom:10px;}
+  .product-thumb{width:48px;height:64px;border-radius:8px;flex-shrink:0;}
+  .product .pinfo{flex:1;}
+  .product .pinfo .n{font-weight:700;font-size:13px;margin:0;}
+  .product .pinfo .t{font-size:11px;color:var(--muted);margin:1px 0;}
+  .product .pinfo .p{font-size:13px;font-weight:700;margin-top:2px;}
+  .add-btn{width:32px;height:32px;border-radius:50%;background:var(--black);color:#fff;border:none;font-size:18px;line-height:1;min-width:44px;min-height:44px;display:flex;align-items:center;justify-content:center;}
+
+  /* ACCOUNT */
+  .acct-header{display:flex;align-items:center;gap:14px;padding:8px 4px 24px;}
+  .avatar{width:56px;height:56px;border-radius:50%;background:var(--black);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:18px;}
+  .acct-header .name{font-weight:700;font-size:16px;margin:0;}
+  .acct-header .sub{font-size:12px;color:var(--muted);margin:2px 0;}
+  .menu-item{display:flex;justify-content:space-between;align-items:center;padding:14px 4px;border-bottom:1px solid var(--border);font-size:14px;min-height:44px;}
+  .menu-item .arrow{color:var(--muted);}
+
+  /* BOTTOM NAV */
+  .bottom-nav{position:fixed;bottom:0;left:0;right:0;max-width:430px;margin:0 auto;height:64px;background:var(--surface);border-top:1px solid var(--border);display:flex;z-index:100;padding-bottom:env(safe-area-inset-bottom);}
+  .nav-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:10px;color:var(--muted);background:none;border:none;min-height:48px;font-weight:600;}
+  .nav-item.active{color:var(--ink);}
+  .nav-item .icon{font-size:18px;}
+</style>
+</head>
+<body>
+<div class="phone">
+
+  <!-- HOME -->
+  <div class="screen active" id="screen-home">
+    <div class="top-bar"><button onclick="void(0)">☰</button><h1></h1><button onclick="void(0)">🔔</button></div>
+    <div class="hero">
+      <div class="hero-badge">☀</div>
+      <h1 class="brand-name">SOLACE</h1>
+      <div class="brand-sub">SUNBED LOUNGE</div>
+      <div class="hero-visual">🛏️</div>
+      <div class="tagline">GLOW. YOUR WAY.</div>
+      <p class="tagline-sub">Premium sunbeds. Beautiful results.</p>
+      <button class="btn btn-primary" onclick="go('book')">Book a Sunbed</button>
+      <button class="btn btn-outline" onclick="go('membership')">Memberships</button>
+    </div>
+    <div class="quick-actions">
+      <div class="qa" onclick="go('spin')"><div class="qa-icon">🎡</div>Spin to Win</div>
+      <div class="qa" onclick="go('shop')"><div class="qa-icon">🛍️</div>Shop</div>
+      <div class="qa" onclick="go('shop')"><div class="qa-icon">🏷️</div>Offers</div>
+      <div class="qa" onclick="go('account')"><div class="qa-icon">👤</div>My Account</div>
+    </div>
+  </div>
+
+  <!-- BOOK: CHOOSE BED -->
+  <div class="screen" id="screen-book">
+    <div class="top-bar"><button onclick="go('home')">←</button><h1>Book a Sunbed</h1><span style="width:44px"></span></div>
+    <div class="content">
+      <div class="tabs">
+        <button class="tab active" id="tab-bed" onclick="showBookTab('bed')">Choose Bed</button>
+        <button class="tab" id="tab-time" onclick="showBookTab('time')">Choose Time</button>
+      </div>
+
+      <div id="bedPane">
+        <div class="section-title">Choose Your Bed</div>
+        <div id="bedList"></div>
+        <button class="btn btn-primary" style="margin-top:8px" onclick="showBookTab('time')">Continue</button>
+      </div>
+
+      <div id="timePane" style="display:none">
+        <div class="selected-bed-card">
+          <div class="bed-thumb" id="selBedThumb" style="background:#2E6FA3">🛏️</div>
+          <div class="info">
+            <div class="name" id="selBedName">Ergoline 7000</div>
+            <div class="meta" id="selBedMeta">£1.20 / min · 24 mins max</div>
+          </div>
+          <button class="change-btn" onclick="showBookTab('bed')">Change</button>
+        </div>
+
+        <div class="section-title">Select Date</div>
+        <div class="date-row" id="dateRow"></div>
+
+        <div class="section-title">Select Time</div>
+        <div class="time-grid" id="timeGrid"></div>
+
+        <button class="btn btn-primary" onclick="confirmBooking()">Confirm Booking</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONFIRMATION -->
+  <div class="screen" id="screen-confirm">
+    <div class="top-bar"><span style="width:44px"></span><h1></h1><span style="width:44px"></span></div>
+    <div class="confirm-wrap">
+      <div class="check-circle">✓</div>
+      <h2 class="confirm-title">BOOKING<br><em>Confirmed</em></h2>
+      <p class="confirm-sub">You're all set to glow ✨</p>
+      <div class="confirm-card">
+        <div class="thumb-row">
+          <div class="bed-thumb" id="cfBedThumb" style="background:#2E6FA3">🛏️</div>
+          <div class="info"><div class="name" id="cfBedName">Ergoline 7000</div></div>
+        </div>
+        <div class="confirm-row"><span class="ico">📅</span><span id="cfDate">Friday, 24 May 2025</span></div>
+        <div class="confirm-row"><span class="ico">🕒</span><span id="cfTime">10:30 – 10:54 (24 mins)</span></div>
+        <div class="confirm-row"><span class="ico">💷</span><span id="cfPrice">£28.80 · £1.20 per min</span></div>
+        <div class="link-row"><span>Add to calendar</span><span>›</span></div>
+      </div>
+    </div>
+    <div class="content"><button class="btn btn-primary" onclick="go('account')">View My Bookings</button></div>
+  </div>
+
+  <!-- MEMBERSHIPS -->
+  <div class="screen" id="screen-membership">
+    <div class="top-bar"><button onclick="go('home')">←</button><h1>Memberships</h1><span style="width:44px"></span></div>
+    <div class="content">
+      <div class="glow-banner"><div><h3>Unlimited Glow</h3><p>No limits. Just results.</p></div><span style="font-size:22px">☀</span></div>
+      <div id="planList"></div>
+      <ul class="perk-list">
+        <li>Use any bed, any time</li>
+        <li>Cancel anytime</li>
+        <li>Exclusive member offers</li>
+        <li>Priority booking</li>
+      </ul>
+      <button class="btn btn-primary">Choose Membership</button>
+    </div>
+  </div>
+
+  <!-- SPIN TO WIN -->
+  <div class="screen" id="screen-spin">
+    <div class="top-bar"><button onclick="go('home')">←</button><h1>Spin to Win</h1><span style="width:44px"></span></div>
+    <div class="spin-wrap">
+      <p>Spin the wheel for a chance to win amazing prizes!</p>
+      <div style="position:relative;width:260px;margin:0 auto;">
+        <div class="pointer"></div>
+        <div class="wheel-outer" id="wheel"><div class="wheel-center">🌴</div></div>
+      </div>
+      <div class="spin-result" id="spinResult"></div>
+      <button class="btn btn-primary" style="margin-top:16px" onclick="spinWheel()" id="spinBtn">Spin the Wheel</button>
+      <div class="spins-left">⏱ You have <span id="spinsLeft">1</span> spin today</div>
+    </div>
+  </div>
+
+  <!-- SHOP -->
+  <div class="screen" id="screen-shop">
+    <div class="top-bar"><button onclick="go('home')">←</button><h1>Shop</h1><button onclick="void(0)">🛒<span id="cartCount" style="font-size:10px;">0</span></button></div>
+    <div class="content">
+      <input class="search-bar" placeholder="Search products..." disabled>
+      <div class="filter-row">
+        <div class="filter-chip active">All</div>
+        <div class="filter-chip">Accelerators</div>
+        <div class="filter-chip">Lotions</div>
+        <div class="filter-chip">Aftercare</div>
+      </div>
+      <div id="productList"></div>
+    </div>
+  </div>
+
+  <!-- ACCOUNT -->
+  <div class="screen" id="screen-account">
+    <div class="top-bar"><button onclick="go('home')">←</button><h1>My Account</h1><button onclick="void(0)">⚙</button></div>
+    <div class="content">
+      <div class="acct-header">
+        <div class="avatar">LS</div>
+        <div><p class="name">Lewis Scott</p><p class="sub">lewis.scott@email.com</p><p class="sub">07912 345678</p></div>
+      </div>
+      <div class="section-title">My Account</div>
+      <div class="menu-item"><span>📅 My Bookings</span><span class="arrow">›</span></div>
+      <div class="menu-item"><span>💳 My Membership</span><span class="arrow">›</span></div>
+      <div class="menu-item"><span>🏦 Payment Methods</span><span class="arrow">›</span></div>
+      <div class="menu-item"><span>🧾 Order History</span><span class="arrow">›</span></div>
+      <div class="menu-item"><span>🔔 Notifications</span><span class="arrow">›</span></div>
+      <div class="menu-item"><span>⚙ Settings</span><span class="arrow">›</span></div>
+      <div class="menu-item" style="border-bottom:none"><span>⏻ Log Out</span><span class="arrow">›</span></div>
+    </div>
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <div class="bottom-nav" id="bottomNav">
+    <button class="nav-item" data-target="home" onclick="go('home')"><span class="icon">🏠</span>Home</button>
+    <button class="nav-item" data-target="book" onclick="go('book')"><span class="icon">📅</span>Book</button>
+    <button class="nav-item" data-target="membership" onclick="go('membership')"><span class="icon">🎫</span>Membership</button>
+    <button class="nav-item" data-target="shop" onclick="go('shop')"><span class="icon">🛍️</span>Shop</button>
+    <button class="nav-item" data-target="account" onclick="go('account')"><span class="icon">👤</span>Account</button>
+  </div>
+</div>
+
+<script>
+// ---- Data ----
+const beds = [
+  {name:'Ergoline 7000', desc:'High performance · 0.3 | 24 mins max', price:'£1.20 / min', ppm:1.20, max:24, color:'#2E6FA3'},
+  {name:'Ergoline 600', desc:'Power & comfort · 0.3 | 20 mins max', price:'£1.00 / min', ppm:1.00, max:20, color:'#6B4FA0'},
+  {name:'Luxura X7', desc:'Premium tanning · 0.3 | 20 mins max', price:'£1.10 / min', ppm:1.10, max:20, color:'#A0332E'},
+  {name:'Hapro Onyx', desc:'Great all rounder · 0.3 | 18 mins max', price:'£0.90 / min', ppm:0.90, max:18, color:'#1C8C8C'}
+];
+const plans = [
+  {name:'GOLD', desc:'Unlimited minutes', price:'£29.99 / month', best:true},
+  {name:'SILVER', desc:'Unlimited minutes', price:'£19.99 / month', best:false},
+  {name:'BRONZE', desc:'60 minutes per month', price:'£9.99 / month', best:false}
+];
+const products = [
+  {name:'Australian Gold', tag:'Accelerator 250ml', price:'£22.00', color:'#D4A017'},
+  {name:'Devoted Creations', tag:'Black Velvet 400ml', price:'£25.00', color:'#3A1F1F'},
+  {name:'Supre Tan', tag:'Maximizer 250ml', price:'£20.00', color:'#B5651D'},
+  {name:'Tan Asz U', tag:'Dark Maximizer 300ml', price:'£18.00', color:'#5D1049'}
+];
+const dates = [{d:'Today',n:'24',m:'May'},{d:'Sat',n:'25',m:'May'},{d:'Sun',n:'26',m:'May'},{d:'Mon',n:'27',m:'May'}];
+const times = ['09:00','09:30','10:00','10:30','11:00','11:30','12:00','12:30','13:00','13:30','14:00','14:30','15:00','15:30','16:00','16:30','17:00','17:30','18:00','18:30','19:00','19:30','20:00','20:30'];
+
+let selectedBed = 0, selectedDate = 0, selectedTime = 6, cartCount = 0, spinsLeft = 1;
+
+// ---- Nav ----
+function go(screen){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('screen-'+screen).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active', n.dataset.target===screen));
+  if(screen==='book') renderBed();
+  window.scrollTo(0,0);
+}
+function showBookTab(tab){
+  document.getElementById('tab-bed').classList.toggle('active', tab==='bed');
+  document.getElementById('tab-time').classList.toggle('active', tab==='time');
+  document.getElementById('bedPane').style.display = tab==='bed' ? 'block':'none';
+  document.getElementById('timePane').style.display = tab==='time' ? 'block':'none';
+  if(tab==='time') renderTime();
+}
+
+// ---- Bed selection ----
+function renderBed(){
+  const list = document.getElementById('bedList');
+  list.innerHTML = beds.map((b,i)=>`
+    <div class="bed-card ${i===selectedBed?'selected':''}" onclick="selectBed(${i})">
+      <div class="bed-thumb" style="background:${b.color}">🛏️</div>
+      <div class="bed-info">
+        <p class="name">${b.name}</p>
+        <p class="desc">${b.desc}</p>
+        <p class="price">${b.price}</p>
+      </div>
+      <div class="radio ${i===selectedBed?'dot':''}"></div>
+    </div>`).join('');
+}
+function selectBed(i){ selectedBed = i; renderBed(); }
+
+function renderTime(){
+  const b = beds[selectedBed];
+  document.getElementById('selBedThumb').style.background = b.color;
+  document.getElementById('selBedName').textContent = b.name;
+  document.getElementById('selBedMeta').textContent = `${b.price} · ${b.max} mins max`;
+
+  document.getElementById('dateRow').innerHTML = dates.map((d,i)=>`
+    <div class="chip ${i===selectedDate?'active':''}" onclick="selectDate(${i})">${d.n}<small>${d.m}</small></div>`).join('');
+  document.getElementById('timeGrid').innerHTML = times.map((t,i)=>`
+    <div class="chip ${i===selectedTime?'active':''}" onclick="selectTime(${i})">${t}</div>`).join('');
+}
+function selectDate(i){ selectedDate = i; renderTime(); }
+function selectTime(i){ selectedTime = i; renderTime(); }
+
+function confirmBooking(){
+  const b = beds[selectedBed];
+  const d = dates[selectedDate];
+  const t = times[selectedTime];
+  const [h,m] = t.split(':').map(Number);
+  const endMin = m + b.max;
+  const endH = h + Math.floor(endMin/60);
+  const endM = endMin % 60;
+  const endT = `${String(endH).padStart(2,'0')}:${String(endM).padStart(2,'0')}`;
+  const price = (b.ppm * b.max).toFixed(2);
+
+  document.getElementById('cfBedThumb').style.background = b.color;
+  document.getElementById('cfBedName').textContent = b.name;
+  document.getElementById('cfDate').textContent = `${d.d}, ${d.n} ${d.m} 2025`;
+  document.getElementById('cfTime').textContent = `${t} – ${endT} (${b.max} mins)`;
+  document.getElementById('cfPrice').textContent = `£${price} · ${b.price}`;
+  go('confirm');
+}
+
+// ---- Memberships ----
+let selectedPlan = 0;
+function renderPlans(){
+  document.getElementById('planList').innerHTML = plans.map((p,i)=>`
+    <div class="plan ${i===selectedPlan?'selected':''}" onclick="selectPlan(${i})">
+      <div><span class="pname">${p.name}</span>${p.best?'<span class="badge">Best value</span>':''}<div class="pdesc">${p.desc}</div></div>
+      <div style="display:flex;align-items:center;gap:12px"><span class="pprice">${p.price}</span><div class="radio ${i===selectedPlan?'dot':''}"></div></div>
+    </div>`).join('');
+}
+function selectPlan(i){ selectedPlan = i; renderPlans(); }
+renderPlans();
+
+// ---- Spin to win ----
+const prizes = ['FREE 5 MINUTES','1 DAY AGAIN','50% OFF CREAMS','£5 OFF','FREE SUNBED SESSION','TRY AGAIN'];
+function spinWheel(){
+  if(spinsLeft<=0) return;
+  const wheel = document.getElementById('wheel');
+  const spins = 5 + Math.random()*2;
+  const extraDeg = Math.floor(Math.random()*360);
+  const totalDeg = spins*360 + extraDeg;
+  wheel.style.transform = `rotate(${totalDeg}deg)`;
+  document.getElementById('spinBtn').disabled = true;
+  spinsLeft--;
+  document.getElementById('spinsLeft').textContent = spinsLeft;
+  setTimeout(()=>{
+    const landed = prizes[Math.floor(((360 - (totalDeg%360)) / 60)) % prizes.length];
+    document.getElementById('spinResult').textContent = 'You won: ' + landed + '! 🎉';
+  }, 3000);
+}
+
+// ---- Shop ----
+function renderProducts(){
+  document.getElementById('productList').innerHTML = products.map((p,i)=>`
+    <div class="product">
+      <div class="product-thumb" style="background:${p.color}"></div>
+      <div class="pinfo"><p class="n">${p.name}</p><p class="t">${p.tag}</p><p class="p">${p.price}</p></div>
+      <button class="add-btn" onclick="addToCart(${i})">+</button>
+    </div>`).join('');
+}
+function addToCart(i){ cartCount++; document.getElementById('cartCount').textContent = cartCount; }
+renderProducts();
+
+// init
+renderBed();
+</script>
+</body>
+</html>
