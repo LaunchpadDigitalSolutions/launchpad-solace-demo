@@ -43,6 +43,14 @@
   .btn-outline{background:transparent;border:1.5px solid var(--black);color:var(--black);}
   .quick-actions{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:24px;text-align:center;}
   .quick-actions .qa{display:flex;flex-direction:column;align-items:center;gap:6px;font-size:11px;color:var(--ink);min-height:44px;justify-content:center;}
+  .popular-section{padding:0 20px 24px;}
+  .popular-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .popular-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;cursor:pointer;}
+  .popular-card .photo{width:100%;height:100px;overflow:hidden;}
+  .popular-card .photo img{width:100%;height:100%;object-fit:cover;}
+  .popular-card .info{padding:10px 12px 12px;}
+  .popular-card .info .n{font-weight:700;font-size:13px;margin:0;}
+  .popular-card .info .p{font-size:12px;color:var(--muted);margin-top:2px;}
   .qa-icon{width:44px;height:44px;border-radius:50%;background:var(--surface);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:18px;}
 
   /* SECTION CONTAINER */
@@ -53,7 +61,11 @@
   .section-title{font-size:12px;letter-spacing:1.5px;color:var(--muted);font-weight:700;margin:8px 0 14px;text-transform:uppercase;}
 
   /* BED CARDS */
-  .bed-card{display:flex;gap:14px;align-items:center;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:12px;margin-bottom:12px;cursor:pointer;}
+  .bed-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;margin-bottom:14px;cursor:pointer;overflow:hidden;}
+  .bed-card.selected{border-color:var(--ink);border-width:2px;}
+  .bed-card .bed-photo{width:100%;height:140px;overflow:hidden;position:relative;}
+  .bed-card .bed-photo img{width:100%;height:100%;object-fit:cover;}
+  .bed-card .bed-body{display:flex;align-items:center;gap:10px;padding:12px 14px;}
   .bed-card.selected{border-color:var(--ink);}
   .bed-thumb{width:64px;height:56px;border-radius:10px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:22px;color:#fff;overflow:hidden;background-size:cover;background-position:center;}
   .bed-thumb img{width:100%;height:100%;object-fit:cover;}
@@ -119,14 +131,16 @@
   .filter-row{display:flex;gap:8px;margin-bottom:16px;overflow-x:auto;}
   .filter-chip{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:8px 16px;font-size:12px;font-weight:600;white-space:nowrap;min-height:36px;}
   .filter-chip.active{background:var(--black);color:#fff;border-color:var(--black);}
-  .product{display:flex;gap:12px;align-items:center;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:12px;margin-bottom:10px;}
-  .product-thumb{width:48px;height:64px;border-radius:8px;flex-shrink:0;overflow:hidden;background:var(--bg);}
+  .product-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .product{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;}
+  .product-thumb{width:100%;height:120px;overflow:hidden;background:var(--bg);}
   .product-thumb img{width:100%;height:100%;object-fit:cover;}
-  .product .pinfo{flex:1;}
+  .product .pinfo{flex:1;padding:10px 12px 12px;}
   .product .pinfo .n{font-weight:700;font-size:13px;margin:0;}
   .product .pinfo .t{font-size:11px;color:var(--muted);margin:1px 0;}
   .product .pinfo .p{font-size:13px;font-weight:700;margin-top:2px;}
-  .add-btn{width:32px;height:32px;border-radius:50%;background:var(--black);color:#fff;border:none;font-size:18px;line-height:1;min-width:44px;min-height:44px;display:flex;align-items:center;justify-content:center;}
+  .product .pinfo-row{display:flex;align-items:flex-end;justify-content:space-between;padding:0 12px 12px;}
+  .add-btn{width:32px;height:32px;border-radius:50%;background:var(--black);color:#fff;border:none;font-size:18px;line-height:1;min-width:36px;min-height:36px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 
   /* ACCOUNT */
   .acct-header{display:flex;align-items:center;gap:14px;padding:8px 4px 24px;}
@@ -164,6 +178,10 @@
       <div class="qa" onclick="go('shop')"><div class="qa-icon">🛍️</div>Shop</div>
       <div class="qa" onclick="go('shop')"><div class="qa-icon">🏷️</div>Offers</div>
       <div class="qa" onclick="go('account')"><div class="qa-icon">👤</div>My Account</div>
+    </div>
+    <div class="popular-section">
+      <div class="section-title" style="margin-bottom:12px">Popular Beds</div>
+      <div class="popular-row" id="popularRow"></div>
     </div>
   </div>
 
@@ -260,13 +278,13 @@
     <div class="top-bar"><button onclick="go('home')">←</button><h1>Shop</h1><button onclick="void(0)">🛒<span id="cartCount" style="font-size:10px;">0</span></button></div>
     <div class="content">
       <input class="search-bar" placeholder="Search products..." disabled>
-      <div class="filter-row">
-        <div class="filter-chip active">All</div>
-        <div class="filter-chip">Accelerators</div>
-        <div class="filter-chip">Lotions</div>
-        <div class="filter-chip">Aftercare</div>
+      <div class="filter-row" id="filterRow">
+        <div class="filter-chip active" data-cat="All" onclick="filterProducts('All')">All</div>
+        <div class="filter-chip" data-cat="Accelerators" onclick="filterProducts('Accelerators')">Accelerators</div>
+        <div class="filter-chip" data-cat="Lotions" onclick="filterProducts('Lotions')">Lotions</div>
+        <div class="filter-chip" data-cat="Aftercare" onclick="filterProducts('Aftercare')">Aftercare</div>
       </div>
-      <div id="productList"></div>
+      <div class="product-grid" id="productList"></div>
     </div>
   </div>
 
@@ -313,10 +331,10 @@ const plans = [
   {name:'BRONZE', desc:'60 minutes per month', price:'£9.99 / month', best:false}
 ];
 const products = [
-  {name:'Australian Gold', tag:'Accelerator 250ml', price:'£22.00', img:'https://d8j0ntlcm91z4.cloudfront.net/user_3F2zO4mnH1Ac9Z8aX9b4j07BQzs/hf_20260901_102959_6d55b490-3d05-4f59-9113-7d6e4d206c9d.png'},
-  {name:'Devoted Creations', tag:'Black Velvet 400ml', price:'£25.00', img:'https://d8j0ntlcm91z4.cloudfront.net/user_3F2zO4mnH1Ac9Z8aX9b4j07BQzs/hf_20260901_102959_63421ae9-0250-4a99-9271-408e9d5e3cb8.png'},
-  {name:'Supre Tan', tag:'Maximizer 250ml', price:'£20.00', img:'https://d8j0ntlcm91z4.cloudfront.net/user_3F2zO4mnH1Ac9Z8aX9b4j07BQzs/hf_20260901_103031_cd34de9c-7f55-4229-8ae6-9e8f7baa745f.png'},
-  {name:'Tan Asz U', tag:'Dark Maximizer 300ml', price:'£18.00', img:'https://d8j0ntlcm91z4.cloudfront.net/user_3F2zO4mnH1Ac9Z8aX9b4j07BQzs/hf_20260901_102959_d9ad0b6a-ac47-4489-8d70-62e534168724.png'}
+  {name:'Australian Gold', tag:'Accelerator 250ml', price:'£22.00', cat:'Accelerators', img:'https://d8j0ntlcm91z4.cloudfront.net/user_3F2zO4mnH1Ac9Z8aX9b4j07BQzs/hf_20260901_102959_6d55b490-3d05-4f59-9113-7d6e4d206c9d.png'},
+  {name:'Devoted Creations', tag:'Black Velvet 400ml', price:'£25.00', cat:'Lotions', img:'https://d8j0ntlcm91z4.cloudfront.net/user_3F2zO4mnH1Ac9Z8aX9b4j07BQzs/hf_20260901_102959_63421ae9-0250-4a99-9271-408e9d5e3cb8.png'},
+  {name:'Supre Tan', tag:'Maximizer 250ml', price:'£20.00', cat:'Accelerators', img:'https://d8j0ntlcm91z4.cloudfront.net/user_3F2zO4mnH1Ac9Z8aX9b4j07BQzs/hf_20260901_103031_cd34de9c-7f55-4229-8ae6-9e8f7baa745f.png'},
+  {name:'Tan Asz U', tag:'Dark Maximizer 300ml', price:'£18.00', cat:'Lotions', img:'https://d8j0ntlcm91z4.cloudfront.net/user_3F2zO4mnH1Ac9Z8aX9b4j07BQzs/hf_20260901_102959_d9ad0b6a-ac47-4489-8d70-62e534168724.png'}
 ];
 const dates = [{d:'Today',n:'24',m:'May'},{d:'Sat',n:'25',m:'May'},{d:'Sun',n:'26',m:'May'},{d:'Mon',n:'27',m:'May'}];
 const times = ['09:00','09:30','10:00','10:30','11:00','11:30','12:00','12:30','13:00','13:30','14:00','14:30','15:00','15:30','16:00','16:30','17:00','17:30','18:00','18:30','19:00','19:30','20:00','20:30'];
@@ -329,7 +347,24 @@ function go(screen){
   document.getElementById('screen-'+screen).classList.add('active');
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active', n.dataset.target===screen));
   if(screen==='book') renderBed();
+  if(screen==='home') renderPopular();
   window.scrollTo(0,0);
+}
+function renderPopular(){
+  const top2 = [beds[0], beds[2]];
+  document.getElementById('popularRow').innerHTML = top2.map(b=>{
+    const idx = beds.indexOf(b);
+    return `
+    <div class="popular-card" onclick="quickBook(${idx})">
+      <div class="photo"><img src="${b.img}" alt="${b.name}"></div>
+      <div class="info"><p class="n">${b.name}</p><p class="p">${b.price}</p></div>
+    </div>`;
+  }).join('');
+}
+function quickBook(i){
+  selectedBed = i;
+  go('book');
+  showBookTab('time');
 }
 function showBookTab(tab){
   document.getElementById('tab-bed').classList.toggle('active', tab==='bed');
@@ -344,13 +379,15 @@ function renderBed(){
   const list = document.getElementById('bedList');
   list.innerHTML = beds.map((b,i)=>`
     <div class="bed-card ${i===selectedBed?'selected':''}" onclick="selectBed(${i})">
-      <div class="bed-thumb"><img src="${b.img}" alt="${b.name}"></div>
-      <div class="bed-info">
-        <p class="name">${b.name}</p>
-        <p class="desc">${b.desc}</p>
-        <p class="price">${b.price}</p>
+      <div class="bed-photo"><img src="${b.img}" alt="${b.name}"></div>
+      <div class="bed-body">
+        <div class="bed-info">
+          <p class="name">${b.name}</p>
+          <p class="desc">${b.desc}</p>
+          <p class="price">${b.price}</p>
+        </div>
+        <div class="radio ${i===selectedBed?'dot':''}"></div>
       </div>
-      <div class="radio ${i===selectedBed?'dot':''}"></div>
     </div>`).join('');
 }
 function selectBed(i){ selectedBed = i; renderBed(); }
@@ -419,19 +456,30 @@ function spinWheel(){
 }
 
 // ---- Shop ----
+let activeCategory = 'All';
 function renderProducts(){
-  document.getElementById('productList').innerHTML = products.map((p,i)=>`
+  const filtered = activeCategory==='All' ? products : products.filter(p=>p.cat===activeCategory);
+  document.getElementById('productList').innerHTML = filtered.map((p,i)=>{
+    const realIndex = products.indexOf(p);
+    return `
     <div class="product">
       <div class="product-thumb"><img src="${p.img}" alt="${p.name}"></div>
-      <div class="pinfo"><p class="n">${p.name}</p><p class="t">${p.tag}</p><p class="p">${p.price}</p></div>
-      <button class="add-btn" onclick="addToCart(${i})">+</button>
-    </div>`).join('');
+      <div class="pinfo"><p class="n">${p.name}</p><p class="t">${p.tag}</p></div>
+      <div class="pinfo-row"><span class="p">${p.price}</span><button class="add-btn" onclick="addToCart(${realIndex})">+</button></div>
+    </div>`;
+  }).join('');
+}
+function filterProducts(cat){
+  activeCategory = cat;
+  document.querySelectorAll('#filterRow .filter-chip').forEach(c=>c.classList.toggle('active', c.dataset.cat===cat));
+  renderProducts();
 }
 function addToCart(i){ cartCount++; document.getElementById('cartCount').textContent = cartCount; }
 renderProducts();
 
 // init
 renderBed();
+renderPopular();
 </script>
 </body>
 </html>
